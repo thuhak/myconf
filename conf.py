@@ -12,6 +12,10 @@ except:
 
 
 class Conf(UserDict):
+    '''
+    common config file loader, load json an yaml file into Conf instance.
+    when there is include=subpath in config file, take it as sub config.
+    '''
     def __init__(self, path):
         self.config_file = path
         self.subdir = ''
@@ -37,6 +41,7 @@ class Conf(UserDict):
         return data
 
     def load(self):
+        '''load all config value into instance'''
         with self.lock:
             data = self._load(self.config_file)
             if os.path.isdir(data.get('include', '')):

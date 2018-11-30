@@ -14,6 +14,12 @@ except:
 
 
 class Conf(UserDict, ProcessEvent):
+    '''
+    common config file loader, load json an yaml file into Conf instance.
+    when there is include=subpath in config file, take it as sub config.
+    auto update config when config file has been changed. this feature is
+    available only on linux platform.
+    '''
     def __init__(self, path):
         self.config_file = path
         self.subdir = ''
@@ -43,6 +49,7 @@ class Conf(UserDict, ProcessEvent):
         return data
 
     def load(self):
+        '''load all config value into instance'''
         with self.lock:
             data = self._load(self.config_file)
             if isinstance(data, Mapping) and os.path.isdir(data.get('include', '')):
@@ -56,6 +63,7 @@ class Conf(UserDict, ProcessEvent):
             self.data = data
 
     def process_default(self, event):
+        '''update when config file has been changed'''
         conf = event.name
         flag = conf.endswith('.json')
         if ENABLE_YML:
@@ -65,6 +73,7 @@ class Conf(UserDict, ProcessEvent):
             self.load()
 
     def monitor(self):
+        '''big brother is watching you'''
         wm = WatchManager()
         main_mask = IN_MODIFY
         sub_mask = IN_DELETE | IN_MODIFY | IN_CREATE
