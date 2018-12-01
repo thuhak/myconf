@@ -1,4 +1,5 @@
 from collections import UserDict
+from collections.abc import Mapping
 import logging
 import threading
 import json
@@ -43,7 +44,9 @@ class Conf(UserDict):
                 raise ValueError('main config fail')
             else:
                 logging.error('sub config fail, skip..')
-                return {}
+        if not isinstance(data, Mapping):
+            logging.warning('{} is not a dict')
+            data = {}
         return data
 
     def load(self):

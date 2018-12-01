@@ -45,14 +45,16 @@ class Conf(UserDict, ProcessEvent):
                 raise ValueError('main config fail')
             else:
                 logging.error('sub config fail, skip..')
-                return {}
+        if not isinstance(data, Mapping):
+            logging.warning('{} is not a dict')
+            data = {}
         return data
 
     def load(self):
         '''load all config value into instance'''
         with self.lock:
             data = self._load(self.config_file)
-            if isinstance(data, Mapping) and os.path.isdir(data.get('include', '')):
+            if os.path.isdir(data.get('include', '')):
                 self.subdir = data['include']
                 sub_confs = glob(os.path.join(self.subdir, '*.json'))
                 if ENABLE_YML:
