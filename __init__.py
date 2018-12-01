@@ -1,7 +1,6 @@
 #author: thuhak.zhou@nio.com
 try:
-    import pyinotify
-    from autochange_conf import Conf
+    from inotify_conf import Conf
 except:
     from conf import Conf
 

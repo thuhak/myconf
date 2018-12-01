@@ -3,6 +3,7 @@ import logging
 import threading
 import json
 import os
+import time
 from glob import glob
 try:
     import yaml
@@ -15,12 +16,17 @@ class Conf(UserDict):
     '''
     common config file loader, load json an yaml file into Conf instance.
     when there is include=subpath in config file, take it as sub config.
+    update data every interval seconds
     '''
-    def __init__(self, path):
+    def __init__(self, path, interval=3):
         self.config_file = path
         self.subdir = ''
+        self.interval = interval
         self.lock = threading.RLock()
         self.load()
+        update_worker = threading.Thread(target=self.refresh)
+        update_worker.setDaemon(True)
+        update_worker.start()
 
     def _load(self, path):
         logging.info('loading {}'.format(path))
@@ -42,14 +48,19 @@ class Conf(UserDict):
 
     def load(self):
         '''load all config value into instance'''
-        with self.lock:
-            data = self._load(self.config_file)
-            if os.path.isdir(data.get('include', '')):
-                self.subdir = data['include']
-                sub_confs = glob(os.path.join(self.subdir, '*.json'))
-                if ENABLE_YML:
-                    sub_confs.extend(glob(os.path.join(self.subdir, '*.yml')))
-                    sub_confs.extend(glob(os.path.join(self.subdir, '*.yaml')))
-                for sub in sub_confs:
-                    data.update(self._load(sub))
-            self.data = data
+        data = self._load(self.config_file)
+        if os.path.isdir(data.get('include', '')):
+            self.subdir = data['include']
+            sub_confs = glob(os.path.join(self.subdir, '*.json'))
+            if ENABLE_YML:
+                sub_confs.extend(glob(os.path.join(self.subdir, '*.yml')))
+                sub_confs.extend(glob(os.path.join(self.subdir, '*.yaml')))
+            for sub in sub_confs:
+                data.update(self._load(sub))
+        self.data = data
+
+    def refresh(self):
+        while True:
+            time.sleep(self.interval)
+            self.load()
+

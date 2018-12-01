@@ -1,5 +1,5 @@
 {
   "arg1": "g",
-  "arg2": ["d","e","g"],
+  "arg2": ["x","e","f"],
   "include": "/tmp/conf/"
 }
