@@ -1,4 +1,12 @@
 #author: thuhak.zhou@nio.com
+'''
+Common config file loader
+
+load json an yaml file into Conf instance.
+when there is include=subpath in config file, take it as sub config.
+auto update when config file has been changed
+
+'''
 try:
     from inotify_conf import Conf
 except:
