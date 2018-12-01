@@ -15,7 +15,7 @@ except:
 
 class Conf(UserDict, ProcessEvent):
     '''
-    common config file loader, load json an yaml file into Conf instance.
+    common config file loader, load json and yaml file into Conf instance.
     when there is include=subpath in config file, take it as sub config.
     auto update config when config file has been changed. this feature is
     available only on linux platform.

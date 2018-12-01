@@ -14,7 +14,7 @@ except:
 
 class Conf(UserDict):
     '''
-    common config file loader, load json an yaml file into Conf instance.
+    common config file loader, load json and yaml file into Conf instance.
     when there is include=subpath in config file, take it as sub config.
     update data every interval seconds
     '''
