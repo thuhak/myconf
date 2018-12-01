@@ -12,6 +12,8 @@ try:
 except:
     ENABLE_YML = False
 
+logger = logging.getLogger(__name__)
+
 
 class Conf(UserDict, ProcessEvent):
     '''
@@ -31,7 +33,7 @@ class Conf(UserDict, ProcessEvent):
         monitor_worker.start()
 
     def _load(self, path):
-        logging.info('loading {}'.format(path))
+        logger.info('loading {}'.format(path))
         try:
             with open(path) as f:
                 if ENABLE_YML and path.endswith('.yaml') or path.endswith('.yml'):
@@ -40,13 +42,13 @@ class Conf(UserDict, ProcessEvent):
                 elif path.endswith('.json'):
                     data = json.load(f)
         except:
-            logging.error('{} can not parse'.format(path))
+            logger.error('{} can not parse'.format(path))
             if path == self.config_file:
                 raise ValueError('main config fail')
             else:
-                logging.error('sub config fail, skip..')
+                logger.error('sub config fail, skip..')
         if not isinstance(data, Mapping):
-            logging.warning('{} is not a dict')
+            logger.warning('{} is not a dict')
             data = {}
         return data
 
@@ -71,7 +73,7 @@ class Conf(UserDict, ProcessEvent):
         if ENABLE_YML:
             flag = flag or conf.endswith('.yaml') or conf.endswith('.yml')
         if flag:
-            logging.info('config file change, reloading...')
+            logger.info('config file change, reloading...')
             self.load()
 
     def monitor(self):
@@ -79,9 +81,9 @@ class Conf(UserDict, ProcessEvent):
         wm = WatchManager()
         main_mask = IN_MODIFY
         sub_mask = IN_DELETE | IN_MODIFY | IN_CREATE
-        logging.info('start watching main config: {}'.format(self.config_file))
+        logger.info('start watching main config: {}'.format(self.config_file))
         wm.add_watch(self.config_file, main_mask)
-        logging.info('start watching sub config: {}'.format(self.subdir))
+        logger.info('start watching sub config: {}'.format(self.subdir))
         wm.add_watch(self.subdir, sub_mask, auto_add=True, rec=True)
         notifier = Notifier(wm, self)
         while True:

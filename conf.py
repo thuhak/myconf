@@ -12,6 +12,8 @@ try:
 except:
     ENABLE_YML = False
 
+logger = logging.getLogger(__name__)
+
 
 class Conf(UserDict):
     '''
@@ -30,7 +32,7 @@ class Conf(UserDict):
         update_worker.start()
 
     def _load(self, path):
-        logging.info('loading {}'.format(path))
+        logger.info('loading {}'.format(path))
         try:
             with open(path) as f:
                 if ENABLE_YML and path.endswith('.yaml') or path.endswith('.yml'):
@@ -39,13 +41,13 @@ class Conf(UserDict):
                 elif path.endswith('.json'):
                     data = json.load(f)
         except:
-            logging.error('{} can not parse'.format(path))
+            logger.error('{} can not parse'.format(path))
             if path == self.config_file:
                 raise ValueError('main config fail')
             else:
-                logging.error('sub config fail, skip..')
+                logger.error('sub config fail, skip..')
         if not isinstance(data, Mapping):
-            logging.warning('{} is not a dict')
+            logger.warning('{} is not a dict')
             data = {}
         return data
 
