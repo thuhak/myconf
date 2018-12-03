@@ -6,6 +6,7 @@ import json
 import os
 from glob import glob
 from pyinotify import WatchManager, Notifier, ProcessEvent, IN_DELETE, IN_CREATE, IN_MODIFY
+import time
 try:
     import yaml
     ENABLE_YML = True
@@ -26,6 +27,7 @@ class Conf(UserDict, ProcessEvent):
         self.config_file = path
         self.subdir = ''
         self.lock = threading.RLock()
+        self.data = {}
         self.load()
         ProcessEvent.__init__(self)
         monitor_worker = threading.Thread(target=self.monitor)
@@ -33,23 +35,22 @@ class Conf(UserDict, ProcessEvent):
         monitor_worker.start()
 
     def _load(self, path):
-        logger.info('loading {}'.format(path))
+        logger.debug('loading {}'.format(path))
+        data = {}
         try:
             with open(path) as f:
-                if ENABLE_YML and path.endswith('.yaml') or path.endswith('.yml'):
+                if ENABLE_YML and (path.endswith('.yaml') or path.endswith('.yml')):
                     d = f.read()
                     data = yaml.load(d)
                 elif path.endswith('.json'):
-                    data = json.load(f)
+                    d = f.read()
+                    data = json.loads(d)
+        except FileNotFoundError:
+            logging.error('can not find file {}'.format(path))
         except:
-            logger.error('{} can not parse'.format(path))
-            if path == self.config_file:
-                raise ValueError('main config fail')
-            else:
-                logger.error('sub config fail, skip..')
+            logger.error('{} can not parse, skipping'.format(path))
         if not isinstance(data, Mapping):
-            logger.warning('{} is not a dict')
-            data = {}
+            logger.warning('{} must be dict format'.format(path))
         return data
 
     def load(self):
@@ -63,17 +64,19 @@ class Conf(UserDict, ProcessEvent):
                     sub_confs.extend(glob(os.path.join(self.subdir, '*.yml')))
                     sub_confs.extend(glob(os.path.join(self.subdir, '*.yaml')))
                 for sub in sub_confs:
+                    logging.debug('loading sub conf {}'.format(sub))
                     data.update(self._load(sub))
-            self.data = data
+            self.data.update(data)
 
     def process_default(self, event):
-        '''update when config file has been changed'''
-        conf = event.name
+        '''update data when config file has been changed'''
+        conf = event.path
         flag = conf.endswith('.json')
         if ENABLE_YML:
             flag = flag or conf.endswith('.yaml') or conf.endswith('.yml')
         if flag:
             logger.info('config file change, reloading...')
+            time.sleep(1)    #bug fix
             self.load()
 
     def monitor(self):
@@ -86,7 +89,8 @@ class Conf(UserDict, ProcessEvent):
         logger.info('start watching sub config: {}'.format(self.subdir))
         wm.add_watch(self.subdir, sub_mask, auto_add=True, rec=True)
         notifier = Notifier(wm, self)
-        while True:
-            notifier.process_events()
-            if notifier.check_events():
-                notifier.read_events()
+        notifier.loop()
+        # while True:
+        #     notifier.process_events()
+        #     if notifier.check_events():
+        #         notifier.read_events()
