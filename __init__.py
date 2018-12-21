@@ -39,16 +39,17 @@ class BasicConf(UserDict):
     common config file loader, load json and yaml file into Conf instance.
     when there is include=subpath in config file, take it as sub config.
     '''
-    def __init__(self, path):
+    def __init__(self, path, refresh=True):
         self.config_file = path
         self.subdir = ''
         self.lock = threading.Lock()
         self.data = {}
         self.state_table = {}
         self.load()
-        monitor_worker = threading.Thread(target=self.monitor)
-        monitor_worker.setDaemon(True)
-        monitor_worker.start()
+        if refresh:
+            monitor_worker = threading.Thread(target=self.monitor)
+            monitor_worker.setDaemon(True)
+            monitor_worker.start()
 
     def _load(self, path):
         '''load config from path'''
