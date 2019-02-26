@@ -1,4 +1,4 @@
-'''
+"""
 Common config file loader
 
 require python3.4+
@@ -7,8 +7,8 @@ load json and yaml file into Conf instance.
 when there is include=subpath in config file, take it as sub config.
 auto update when config file has been changed
 
-'''
-#author: thuhak.zhou@nio.com
+"""
+# author: thuhak.zhou@nio.com
 import types
 from inspect import signature
 from functools import total_ordering
@@ -54,13 +54,13 @@ class WatchedData:
 
 
 class ConfMeta(type):
-    '''
+    """
     regist callback function
-    '''
+    """
     def __init__(cls, clsname, bases, clsdict):
         super().__init__(clsname, bases, clsdict)
         watched_items = []
-        for k,v in clsdict.items():
+        for k, v in clsdict.items():
             if k.startswith('onchange_') and isinstance(v, types.FunctionType):
                 sig = signature(v)
                 if 'old' not in sig.parameters or 'new' not in sig.parameters:
@@ -75,11 +75,12 @@ class ConfMeta(type):
 
 
 class BasicConf(dict, metaclass=ConfMeta):
-    '''
+    """
     common config file loader, load json and yaml file into Conf instance.
     when there is include=subpath in config file, take it as sub config.
-    '''
+    """
     def __init__(self, config_file, refresh=True):
+        super().__init__()
         self.config_file = config_file
         self.subdir = ''
         self.lock = threading.Lock()
@@ -135,7 +136,7 @@ class BasicConf(dict, metaclass=ConfMeta):
         return self._data.get(k, d)
 
     def _load(self, path):
-        '''load config from path'''
+        """load config from path"""
         data = {}
         try:
             if os.stat(path).st_mtime >= self.state_table.get(path, (0,))[0]:
@@ -157,7 +158,7 @@ class BasicConf(dict, metaclass=ConfMeta):
         return self.state_table[path][1] if path in self.state_table else {}
 
     def load(self, init=False):
-        '''load all config value into instance'''
+        """load all config value into instance"""
         with self.lock:
             data = deepcopy(self._load(self.config_file))
             if os.path.isdir(data.get('include', '')):
@@ -188,28 +189,28 @@ class BasicConf(dict, metaclass=ConfMeta):
 
 if HAS_INOTIFY:
     class Conf(BasicConf, ProcessEvent):
-        '''
+        """
         common config file loader, load json and yaml file into Conf instance.
         when there is include=subpath in config file, take it as sub config.
         auto update config when config file has been changed. this feature is
         available only on linux platform.
-        '''
+        """
         def __init__(self, path, refresh=True):
             ProcessEvent.__init__(self)
             BasicConf.__init__(self, path, refresh)
 
         def process_default(self, event):
-            '''update data when config file has been changed'''
+            """update data when config file has been changed"""
             conf = event.pathname
             flag = conf.endswith('.json') or conf.endswith('.yaml') or conf.endswith('.yml')
             if flag:
                 logger.info('config file change, reloading...')
-                #bug fix
+                # bug fix
                 time.sleep(1)
                 self.load()
 
         def monitor(self):
-            '''big brother is watching you'''
+            """big brother is watching you"""
             wm = WatchManager()
             main_mask = IN_MODIFY
             sub_mask = IN_DELETE | IN_MODIFY | IN_CREATE
@@ -223,11 +224,11 @@ if HAS_INOTIFY:
 
 else:
     class Conf(BasicConf):
-        '''
+        """
         common config file loader, load json and yaml file into Conf instance.
         when there is include=subpath in config file, take it as sub config.
         update data every interval seconds
-        '''
+        """
         def __init__(self, path, refresh=True, interval=3):
             self.interval = interval
             BasicConf.__init__(self, path, refresh)
