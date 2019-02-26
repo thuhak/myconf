@@ -13,13 +13,18 @@ platform = get_platform()
 if platform.startswith('linux') or platform.startswith('freebsd'):
     require_libs.append('pyinotify==0.9.6')
 
+with open('README.md') as f:
+    long_description = f.read().strip()
+
 
 setup(
     name='myconf',
+    description='load json or yaml files as python dict, auto refresh when file changing, support item changing callback',
+    long_description = long_description,
+    long_description_content_type = 'text/markdown',
     version='1.1.0',
     author='thuhak',
     author_email='thuhak.zhou@nio.com',
-    description='load json or yaml files as python dict, auto refresh when file changing, support item changing callback',
     keywords='configfile',
     packages =['myconf'],
     url='https://github.com/thuhak/myconf',
