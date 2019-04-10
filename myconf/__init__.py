@@ -32,9 +32,9 @@ except ImportError:
 
 
 __all__ = ['Conf']
-__version__ = '1.1.0'
+__version__ = '1.1.1'
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('myconf')
 
 
 @total_ordering
@@ -196,6 +196,7 @@ if HAS_INOTIFY:
         available only on linux platform.
         """
         def __init__(self, path, refresh=True):
+            logger.debug('using inotify for monitoring configuration change')
             ProcessEvent.__init__(self)
             BasicConf.__init__(self, path, refresh)
 
